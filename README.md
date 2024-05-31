@@ -5,11 +5,21 @@ This is a Strapi starter for the latest version as of its setup, 4.22.1. It incl
 - Strapi setup with Typescript and PostgreSQL
 - Docker setup with docker-compose for development and test
 - Test setup using PostgreSQL as test database
-- ESLint and Prettier configuration
+- ESLint and Prettier configuration with Husky to run on commit
 - CI configuration for GitHub Actions
 - Simple Access Role setup as a Strapi Content-Type
 
 For more information about the motivation for this Starter within PALO IT, check this [Sharepoint page](https://paloit2016.sharepoint.com/sites/WOW/SitePages/Strapi-Guidelines.aspx).
+
+## Setup
+
+Assuming you have Node.js 20 and Docker installed:
+* Clone this project
+* Search in all files for "strapi-starter" and change it to the name of your project
+* Copy `.env.example` to `.env`, no need to change any value
+* Run `yarn install`
+* Run `yarn docker:dev`
+* Run `yarn develop`
 
 ## Available commands
 
@@ -57,6 +67,12 @@ Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-
 ```
 yarn build
 ```
+
+## Future improvements
+
+* Add [maildev](https://github.com/maildev/maildev) to develop emails locally.
+* Add [Email Designer](https://market.strapi.io/plugins/strapi-plugin-email-designer) plugin
+* Add [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) to Husky
 
 ## ⚙️ Deployment
 
