@@ -6,31 +6,22 @@ on:
   pull_request:
     branches: ["main"]
 
+# Least-privilege permissions — only read source code
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     environment: test
-    env:
-      APP_KEYS: ${{ secrets.APP_KEYS }}
-      ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
-      API_TOKEN_SALT: ${{ secrets.API_TOKEN_SALT }}
-      TRANSFER_TOKEN_SALT: ${{ secrets.TRANSFER_TOKEN_SALT }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      DATABASE_CLIENT: ${{ vars.DATABASE_CLIENT }}
-      DATABASE_HOST: ${{ vars.DATABASE_HOST }}
-      TEST_DATABASE_USERNAME: ${{ vars.TEST_DATABASE_USERNAME }}
-      TEST_DATABASE_PASSWORD: ${{ vars.TEST_DATABASE_PASSWORD }}
-      TEST_DATABASE_NAME: ${{ vars.TEST_DATABASE_NAME }}
-      TEST_DATABASE_PORT: ${{ vars.TEST_DATABASE_PORT }}
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16
         env:
           POSTGRES_USER: ${{ vars.TEST_DATABASE_USERNAME }}
           POSTGRES_PASSWORD: ${{ vars.TEST_DATABASE_PASSWORD }}
           POSTGRES_DB: ${{ vars.TEST_DATABASE_NAME }}
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -40,14 +31,52 @@ jobs:
           - ${{ vars.TEST_DATABASE_PORT }}:5432
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: "yarn"
-      - run: yarn --frozen-lockfile
-      - run: yarn check-format
-      - run: yarn lint
-      - run: yarn build
-      - run: yarn test
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+        env:
+          # Prevent malicious postinstall/preinstall scripts from running during install
+          # Only husky's postinstall is needed — we run it explicitly below
+          NODE_OPTIONS: ""
+
+      - name: Run format check
+        run: yarn check-format
+
+      - name: Run linter
+        run: yarn lint
+
+      - name: Build
+        run: yarn build
+        env:
+          APP_KEYS: ${{ secrets.APP_KEYS }}
+          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+          API_TOKEN_SALT: ${{ secrets.API_TOKEN_SALT }}
+          TRANSFER_TOKEN_SALT: ${{ secrets.TRANSFER_TOKEN_SALT }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_CLIENT: ${{ vars.DATABASE_CLIENT }}
+          DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+          TEST_DATABASE_USERNAME: ${{ vars.TEST_DATABASE_USERNAME }}
+          TEST_DATABASE_PASSWORD: ${{ vars.TEST_DATABASE_PASSWORD }}
+          TEST_DATABASE_NAME: ${{ vars.TEST_DATABASE_NAME }}
+          TEST_DATABASE_PORT: ${{ vars.TEST_DATABASE_PORT }}
+
+      - name: Run tests
+        run: yarn test
+        env:
+          APP_KEYS: ${{ secrets.APP_KEYS }}
+          ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+          API_TOKEN_SALT: ${{ secrets.API_TOKEN_SALT }}
+          TRANSFER_TOKEN_SALT: ${{ secrets.TRANSFER_TOKEN_SALT }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_CLIENT: ${{ vars.DATABASE_CLIENT }}
+          DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+          TEST_DATABASE_USERNAME: ${{ vars.TEST_DATABASE_USERNAME }}
+          TEST_DATABASE_PASSWORD: ${{ vars.TEST_DATABASE_PASSWORD }}
+          TEST_DATABASE_NAME: ${{ vars.TEST_DATABASE_NAME }}
+          TEST_DATABASE_PORT: ${{ vars.TEST_DATABASE_PORT }}
